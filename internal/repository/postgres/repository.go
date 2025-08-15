@@ -16,7 +16,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-// Create - сохраняет пользователя в БД
+// InsertOrder - Вставка заказа
 func (r *Repository) InsertOrder(ctx context.Context, order *domain.Order) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -90,6 +90,7 @@ func (r *Repository) InsertOrder(ctx context.Context, order *domain.Order) error
 	return tx.Commit(ctx)
 }
 
+// GetOrder - Получение заказа
 func (r *Repository) GetOrder(ctx context.Context, orderId string) (domain.Order, error) {
 	query := `
 		SELECT json_build_object(
