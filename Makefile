@@ -4,6 +4,8 @@ export $(shell sed 's/=.*//' .env)
 run:
 	go run cmd/main.go
 
+run-producer:
+	go run scripts/kafka_producer.go
 #============Docker============
 # Запустить контейнеры
 up:
