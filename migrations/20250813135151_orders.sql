@@ -58,8 +58,8 @@ CREATE TABLE items (
 );
 
 CREATE USER orders_user WITH PASSWORD 'orders_user_password';
-GRANT ALL PRIVILEGES ON DATABASE orders_db TO orders_user;
-GRANT ALL ON SCHEMA public TO orders_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO orders_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO orders_user;
 -- +goose StatementEnd
 
 -- +goose Down
