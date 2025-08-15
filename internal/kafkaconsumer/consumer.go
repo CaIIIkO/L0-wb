@@ -75,5 +75,6 @@ func (c *Consumer) Run(ctx context.Context) error {
 		if err := c.reader.CommitMessages(ctx, m); err != nil {
 			log.Printf("kafka commit error: %v; ignoring", err)
 		}
+		log.Printf("sucsess insert order :%s", order.OrderUID)
 	}
 }
