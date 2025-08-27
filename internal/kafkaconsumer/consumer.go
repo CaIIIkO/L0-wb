@@ -2,6 +2,7 @@ package kafkaconsumer
 
 import (
 	"L0-wb/internal/domain"
+	"L0-wb/internal/repository/cache"
 	"L0-wb/internal/repository/postgres"
 	"context"
 	"encoding/json"
@@ -14,9 +15,10 @@ import (
 type Consumer struct {
 	reader *kafka.Reader
 	repo   *postgres.Repository
+	cache  *cache.Cache
 }
 
-func NewConsumer(brokers []string, topic, groupID string, repo *postgres.Repository) *Consumer {
+func NewConsumer(brokers []string, topic, groupID string, repo *postgres.Repository, cache *cache.Cache) *Consumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:     brokers,
 		GroupID:     groupID,
@@ -28,6 +30,7 @@ func NewConsumer(brokers []string, topic, groupID string, repo *postgres.Reposit
 	return &Consumer{
 		reader: reader,
 		repo:   repo,
+		cache:  cache,
 	}
 }
 
@@ -75,6 +78,9 @@ func (c *Consumer) Run(ctx context.Context) error {
 		if err := c.reader.CommitMessages(ctx, m); err != nil {
 			log.Printf("kafka commit error: %v; ignoring", err)
 		}
+
+		c.cache.Set(order)
+
 		log.Printf("sucsess insert order :%s", order.OrderUID)
 	}
 }
