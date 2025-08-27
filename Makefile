@@ -1,11 +1,14 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
+# Запустить приложение
 run:
 	go run cmd/main.go
 
+# Запустить симуляцию тестового продюсера
 run-producer:
 	go run scripts/kafka_producer.go
+
 #============Docker============
 # Запустить контейнеры
 up:
