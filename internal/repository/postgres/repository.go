@@ -103,7 +103,7 @@ func (r *Repository) GetOrder(ctx context.Context, orderId string) (domain.Order
 			'delivery_service', o.delivery_service,
 			'shard_key', o.shardkey,
 			'sm_id', o.sm_id,
-			'date_created', o.date_created,
+			'date_created', to_char(o.date_created, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
 			'oof_shard', o.oof_shard,
 			'delivery', json_build_object(
 				'name', d.name,
