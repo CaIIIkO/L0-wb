@@ -2,7 +2,9 @@ package httpapi
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
 )
 
 type Handler struct {
@@ -14,9 +16,25 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-	order, err := h.service.GetOrder(r.Context(), "")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) < 2 {
+		http.Error(w, "missing order id", http.StatusBadRequest)
+		return
+	}
+	id := parts[1]
+	log.Println(id)
+	order, err := h.service.GetOrder(r.Context(), id)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
