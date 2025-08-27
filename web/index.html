@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Просмотр заказов</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  input, button { padding: 5px; margin: 5px 0; }
+  pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Просмотр заказов</h1>
+
+<label for="orderId">UID:</label>
+<input type="text" id="orderId" placeholder="Введите UID заказа">
+<button id="fetchBtn">Найти заказ</button>
+
+<h2>JSON Заказа:</h2>
+<pre id="result">Здесь появится результат...</pre>
+
+<script>
+const fetchBtn = document.getElementById('fetchBtn');
+const orderIdInput = document.getElementById('orderId');
+const resultPre = document.getElementById('result');
+
+fetchBtn.addEventListener('click', () => {
+  const orderUID = orderIdInput.value.trim();
+  if (!orderUID) {
+    alert('Введите Order UID');
+    return;
+  }
+
+  fetch(`http://localhost:8081/order/${orderUID}`)
+    .then(res => {
+      if (!res.ok) throw new Error('Ошибка при получении заказа');
+      return res.json();
+    })
+    .then(order => {
+      // Форматированный вывод JSON
+      resultPre.textContent = JSON.stringify(order, null, 2);
+    })
+    .catch(err => {
+      resultPre.textContent = 'Ошибка: ' + err.message;
+    });
+});
+</script>
+
+</body>
+</html>
