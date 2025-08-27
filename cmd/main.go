@@ -1,11 +1,13 @@
 package main
 
 import (
+	"L0-wb/internal/httpapi"
 	"L0-wb/internal/kafkaconsumer"
 	"L0-wb/internal/repository/postgres"
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -47,14 +49,22 @@ func main() {
 		}
 	}()
 
-	// // Запуск http сервера
-	// go func() {
-	// 	log.Println("HTTP server started")
-	// 	if err := http.ListenAndServe(addr, httpSrv); err != nil && err != http.ErrServerClosed {
-	// 		log.Printf("HTTP server stopped: %v", err)
-	// 		cancel()
-	// 	}
-	// }()
+	service := httpapi.NewService(repo)
+	handler := httpapi.NewHandler(service)
+
+	port := os.Getenv("PORT")
+	// Запуск http сервера
+	go func() {
+		log.Printf("HTTP server started http://localhost:%s", port)
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("/order/", handler.GetOrder) //GET
+
+		if err := http.ListenAndServe(":"+port, mux); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server stopped: %v", err)
+			cancel()
+		}
+	}()
 
 	// Ожидание сигнала завершения
 	<-ctx.Done()
