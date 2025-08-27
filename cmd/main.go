@@ -3,6 +3,7 @@ package main
 import (
 	"L0-wb/internal/httpapi"
 	"L0-wb/internal/kafkaconsumer"
+	"L0-wb/internal/repository/cache"
 	"L0-wb/internal/repository/postgres"
 	"context"
 	"fmt"
@@ -32,13 +33,21 @@ func main() {
 
 	// Создание репозитория
 	repo := postgres.NewRepository(pool)
+	cache := cache.New()
+
+	// Прогрев кэша
+	recent, err := repo.LoadRecent(context.Background(), 100)
+	if err != nil {
+		fmt.Printf("err LoadRecent in cache: %s", err)
+	}
+	cache.Warm(recent)
 
 	// Создание консьюмера
 	consumer := kafkaconsumer.NewConsumer(
 		[]string{os.Getenv("KAFKA_BROKER")},
 		os.Getenv("KAFKA_TOPIC"),
 		os.Getenv("KAFKA_GROUP_ID"),
-		repo)
+		repo, cache)
 
 	// Запуск консьюмера
 	go func() {
@@ -49,7 +58,7 @@ func main() {
 		}
 	}()
 
-	service := httpapi.NewService(repo)
+	service := httpapi.NewService(repo, cache)
 	handler := httpapi.NewHandler(service)
 
 	port := os.Getenv("PORT")
