@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -31,10 +30,8 @@ func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := parts[1]
-	log.Println(id)
 	order, err := h.service.GetOrder(r.Context(), id)
 	if err != nil {
-		log.Println(err)
 		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
