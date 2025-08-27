@@ -165,3 +165,82 @@ func (r *Repository) GetOrder(ctx context.Context, orderId string) (domain.Order
 
 	return order, nil
 }
+
+func (r *Repository) LoadRecent(ctx context.Context, n int) ([]domain.Order, error) {
+	query := `
+		SELECT json_agg(order_data)
+		FROM (
+			SELECT json_build_object(
+				'order_uid', o.order_uid,
+				'track_number', o.track_number,
+				'entry', o.entry,
+				'locale', o.locale,
+				'internal_signature', o.internal_signature,
+				'customer_id', o.customer_id,
+				'delivery_service', o.delivery_service,
+				'shard_key', o.shardkey,
+				'sm_id', o.sm_id,
+				'date_created', to_char(o.date_created, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+				'oof_shard', o.oof_shard,
+				'delivery', json_build_object(
+					'name', d.name,
+					'phone', d.phone,
+					'zip', d.zip,
+					'city', d.city,
+					'address', d.address,
+					'region', d.region,
+					'email', d.email
+				),
+				'payment', json_build_object(
+					'transaction', p.transaction,
+					'request_id', p.request_id,
+					'currency', p.currency,
+					'provider', p.provider,
+					'amount', p.amount,
+					'payment_dt', p.payment_dt,
+					'bank', p.bank,
+					'delivery_cost', p.delivery_cost,
+					'goods_total', p.goods_total,
+					'custom_fee', p.custom_fee
+				),
+				'items', (
+					SELECT json_agg(
+						json_build_object(
+							'chrt_id', i.chrt_id,
+							'track_number', i.track_number,
+							'price', i.price,
+							'rid', i.rid,
+							'name', i.name,
+							'sale', i.sale,
+							'size', i.size,
+							'total_price', i.total_price,
+							'nm_id', i.nm_id,
+							'brand', i.brand,
+							'status', i.status
+						)
+					)
+					FROM items i
+					WHERE i.order_uid = o.order_uid
+				)
+			) AS order_data
+			FROM orders o
+			JOIN delivery d ON d.order_uid = o.order_uid
+			JOIN payment p ON p.order_uid = o.order_uid
+			ORDER BY o.date_created DESC
+			LIMIT $1
+		) sub;
+	`
+
+	var rows []byte
+	err := r.pool.QueryRow(ctx, query, n).Scan(&rows)
+	if err != nil {
+		return nil, err
+	}
+
+	var orders []domain.Order
+	if err := json.Unmarshal(rows, &orders); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
